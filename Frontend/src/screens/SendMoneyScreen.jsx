@@ -172,6 +172,6 @@ function SendAbroadForm({ beneficiaries, balance, state, dispatch, navigate, mod
         {error && <div className="flex items-center gap-2 text-xs" style={{ color: T.brick }}><AlertCircle size={14} />{error}</div>}
         <Button full loading={busy} icon={Send} onClick={submit}>Send {q.send > 0 ? money(q.total) : ""}</Button>
       </div>
-    </ScreenHeader>
+  </ScreenHeader>
   );
 }
