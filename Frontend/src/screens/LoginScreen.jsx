@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
-import { T } from "../lib/theme.jsx";
+import { T, DISPLAY } from "../lib/theme.jsx";
 import { Button, TextInput, Field } from "../components/primitives.jsx";
+import { AuthSplit } from "../components/AuthSplit.jsx";
+import { BRAND_NAME } from "../lib/brand.js";
 import { useStore } from "../store/context.jsx";
 import { api } from "../lib/api.js";
-import { DEMO_LOGIN_HINT } from "../lib/db.js";
 
 export default function LoginScreen() {
   const { state, dispatch } = useStore();
@@ -28,10 +29,10 @@ export default function LoginScreen() {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-6 heha-rise" style={{ minHeight: "100%" }}>
-      <div className="flex flex-col gap-1 mt-8">
-        <div className="text-2xl font-semibold" style={{ color: T.pine }}>Heha Banking Agency</div>
-        <div className="text-sm" style={{ color: T.muted }}>Send money home, without the markup.</div>
+    <AuthSplit>
+      <div className="flex flex-col gap-1">
+        <div className="text-3xl" style={{ fontFamily: DISPLAY, fontWeight: 600 }}>Log in</div>
+        <div className="text-sm" style={{ color: T.muted }}>Welcome back — enter your details to continue.</div>
       </div>
       <form className="flex flex-col gap-4" onSubmit={submit}>
         <Field label="Email">
@@ -45,22 +46,22 @@ export default function LoginScreen() {
             </button>
           </div>
         </Field>
+        <button type="button" className="text-sm text-right heha-link" style={{ color: T.muted, alignSelf: "flex-end" }} onClick={() => navigate("/forgot-password")}>
+          Forgot password?
+        </button>
         {state.auth.error && (
           <div className="flex items-center gap-2 text-xs" style={{ color: T.brick }}>
             <AlertCircle size={14} /> {state.auth.error}
           </div>
         )}
         <Button type="submit" full loading={busy}>Log in</Button>
-        <div className="text-xs text-center" style={{ color: T.faint }}>
-          Demo user: {DEMO_LOGIN_HINT.user} · Demo admin: {DEMO_LOGIN_HINT.admin}
-        </div>
       </form>
-      <div className="text-sm text-center mt-auto" style={{ color: T.muted }}>
-        New to Heha?{" "}
-        <button className="font-semibold" style={{ color: T.pine }} onClick={() => navigate("/register")}>
+      <div className="text-sm text-center" style={{ color: T.muted }}>
+        New to {BRAND_NAME}?{" "}
+        <button className="font-semibold heha-link" onClick={() => navigate("/register")}>
           Create an account
         </button>
       </div>
-    </div>
+    </AuthSplit>
   );
 }

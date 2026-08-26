@@ -1,225 +1,136 @@
-import { getDB, withDB } from "./db.js";
-import { uid, round2 } from "./format.js";
-import { randomSalt, hashPassword, verifyPassword } from "./crypto.js";
-import { BASE_RATES } from "./constants.js";
-import { monthKey } from "./format.js";
+import { getToken, setToken, clearToken } from "./session.js";
 
-const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
-const toPublicUser = ({ passwordHash, passwordSalt, wallet, beneficiaries, transactions, ...rest }) => rest;
+async function request(path, { method = "GET", body, auth = false } = {}) {
+  const headers = {};
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  if (auth) {
+    const token = getToken();
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+  }
 
-const sessionPayload = (user) => ({
-  token: uid("session"),
-  user: toPublicUser(user),
-  wallet: user.wallet,
-  beneficiaries: user.beneficiaries,
-  transactions: user.transactions,
-});
+  const res = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(data?.error || "Something went wrong. Please try again.");
+  return data;
+}
 
 export const api = {
   async register({ name, email, phone, country, password }) {
-    await wait(500);
-    if (!phone || phone.replace(/\D/g, "").length < 9)
-      throw new Error("Enter a phone number with at least 9 digits.");
-    if (!email) throw new Error("Enter an email address.");
-    if (!password || password.length < 8) throw new Error("Password must be at least 8 characters.");
-
-    return withDB(async (db) => {
-      if (db.users.some((u) => u.email.toLowerCase() === email.toLowerCase()))
-        throw new Error("An account with that email already exists.");
-      const salt = randomSalt();
-      const passwordHash = await hashPassword(password, salt);
-      const user = {
-        id: uid("usr"), name, email, phone, country: country || "Canada",
-        role: "user", kyc: "unverified", status: "active", joined: new Date().toISOString(),
-        passwordSalt: salt, passwordHash,
-        wallet: { balance: 0, currency: "CAD" },
-        beneficiaries: [], transactions: [],
-      };
-      db.users.push(user);
-      db.session = { userId: user.id, token: uid("session") };
-      return sessionPayload(user);
-    });
+    const session = await request("/api/auth/register", { method: "POST", body: { name, email, phone, country, password } });
+    setToken(session.token);
+    return session;
   },
 
   async login({ email, password }) {
-    await wait(450);
-    if (!email || !password) throw new Error("Enter both your email and password.");
-
-    return withDB(async (db) => {
-      const user = db.users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
-      if (!user) throw new Error("No account found with that email.");
-      const ok = await verifyPassword(password, user.passwordSalt, user.passwordHash);
-      if (!ok) throw new Error("Incorrect password.");
-      if (user.status === "suspended") throw new Error("This account has been suspended.");
-      db.session = { userId: user.id, token: uid("session") };
-      return sessionPayload(user);
-    });
+    const session = await request("/api/auth/login", { method: "POST", body: { email, password } });
+    setToken(session.token);
+    return session;
   },
 
   /** Called once on app boot to silently resume a persisted session, if any. */
   async restoreSession() {
-    const db = await getDB();
-    if (!db.session) return null;
-    const user = db.users.find((u) => u.id === db.session.userId);
-    if (!user) return null;
-    return sessionPayload(user);
+    if (!getToken()) return null;
+    try {
+      return await request("/api/auth/session", { auth: true });
+    } catch {
+      clearToken();
+      return null;
+    }
   },
 
   async logout() {
-    return withDB(async (db) => {
-      db.session = null;
-    });
+    try {
+      await request("/api/auth/logout", { method: "POST", auth: true });
+    } finally {
+      clearToken();
+    }
+  },
+
+  async forgotPassword({ email }) {
+    return request("/api/auth/forgot-password", { method: "POST", body: { email } });
+  },
+
+  async resetPassword({ token, password }) {
+    return request("/api/auth/reset-password", { method: "POST", body: { token, password } });
   },
 
   async rates() {
-    await wait(150);
-    return withDB(async (db) => {
-      const drifted = {};
-      for (const [code, base] of Object.entries(BASE_RATES)) {
-        const prev = db.rates.pairs[code] ?? base;
-        const drift = 1 + (Math.random() - 0.5) * 0.006;
-        drifted[code] = round2(prev * drift * 100) / 100 || prev;
-      }
-      db.rates = { pairs: drifted, updatedAt: new Date().toISOString() };
-      return { ...db.rates.pairs, updatedAt: db.rates.updatedAt };
+    return request("/api/rates");
+  },
+
+  async updateProfile(patch) {
+    return request("/api/auth/me", { method: "PATCH", auth: true, body: patch });
+  },
+
+  async addFunds({ amount, source }) {
+    return request("/api/wallet/add-funds", { method: "POST", auth: true, body: { amount, source } });
+  },
+
+  async withdraw({ amount, destination }) {
+    return request("/api/wallet/withdraw", { method: "POST", auth: true, body: { amount, destination } });
+  },
+
+  async addBeneficiary(b) {
+    return request("/api/beneficiaries", { method: "POST", auth: true, body: b });
+  },
+
+  async removeBeneficiary(id) {
+    const { id: removedId } = await request(`/api/beneficiaries/${id}`, { method: "DELETE", auth: true });
+    return removedId;
+  },
+
+  /** The server recomputes fee/rate/received from the beneficiary's currency and the live
+   *  rate — it doesn't trust the client-side quote used for the pre-submit estimate. */
+  async sendMoney({ beneficiary, q, method }) {
+    return request("/api/transfers", {
+      method: "POST",
+      auth: true,
+      body: { beneficiaryId: beneficiary.id, amount: q.send, method },
     });
   },
 
-  async updateProfile(userId, patch) {
-    await wait(500);
-    return withDB(async (db) => {
-      const user = db.users.find((u) => u.id === userId);
-      if (!user) throw new Error("User not found.");
-      Object.assign(user, patch);
-      return patch;
-    });
+  /** Sends CAD straight into another Heha user's wallet, identified by their Pay ID (email). */
+  async sendToUser({ email, amount }) {
+    return request("/api/transfers/to-user", { method: "POST", auth: true, body: { email, amount } });
   },
 
-  async addFunds(userId, { amount, source }) {
-    await wait(700);
-    if (amount <= 0) throw new Error("Enter an amount greater than zero.");
-    return withDB(async (db) => {
-      const user = db.users.find((u) => u.id === userId);
-      if (!user) throw new Error("User not found.");
-      const tx = { id: uid("TX"), type: "topup", status: "completed", name: `Top up · ${source}`, amount, fee: 0, spreadRevenue: 0, createdAt: new Date().toISOString() };
-      user.wallet.balance = round2(user.wallet.balance + amount);
-      user.transactions = [tx, ...user.transactions];
-      return tx;
-    });
+  async requestMoney({ email, amount, note }) {
+    return request("/api/requests", { method: "POST", auth: true, body: { email, amount, note } });
   },
 
-  async addBeneficiary(userId, b) {
-    await wait(500);
-    return withDB(async (db) => {
-      const user = db.users.find((u) => u.id === userId);
-      if (!user) throw new Error("User not found.");
-      const beneficiary = { ...b, id: uid("ben") };
-      user.beneficiaries = [beneficiary, ...user.beneficiaries];
-      return beneficiary;
-    });
+  async listRequests() {
+    return request("/api/requests", { auth: true });
   },
 
-  async removeBeneficiary(userId, id) {
-    await wait(300);
-    return withDB(async (db) => {
-      const user = db.users.find((u) => u.id === userId);
-      if (!user) throw new Error("User not found.");
-      user.beneficiaries = user.beneficiaries.filter((b) => b.id !== id);
-      return id;
-    });
+  async payRequest(id) {
+    return request(`/api/requests/${id}/pay`, { method: "POST", auth: true });
   },
 
-  async sendMoney(userId, { beneficiary, q, method }) {
-    await wait(900);
-    return withDB(async (db) => {
-      const user = db.users.find((u) => u.id === userId);
-      if (!user) throw new Error("User not found.");
-      if (q.total > user.wallet.balance) throw new Error("That's more than your wallet balance.");
-      const tx = {
-        id: uid("TX"), type: "send", status: "pending", beneficiaryId: beneficiary.id,
-        name: beneficiary.name, amount: q.send, currency: beneficiary.currency,
-        rate: q.rate, fee: q.fee, spreadRevenue: q.spreadRevenue, received: q.received,
-        method, createdAt: new Date().toISOString(),
-      };
-      user.wallet.balance = round2(user.wallet.balance - q.send - q.fee);
-      user.transactions = [tx, ...user.transactions];
-      return tx;
-    });
+  async declineRequest(id) {
+    return request(`/api/requests/${id}/decline`, { method: "POST", auth: true });
   },
 
-  /** Aggregates every user's real transactions into the admin's platform-wide view. */
+  /** Admin-only aggregate view; the backend derives it from every user's real transactions. */
   async adminData() {
-    await wait(500);
-    const db = await getDB();
-    const users = db.users.map(toPublicUser).map((u) => ({
-      ...u,
-      balance: db.users.find((x) => x.id === u.id).wallet.balance,
-      sends: db.users.find((x) => x.id === u.id).transactions.filter((t) => t.type === "send").length,
-      volume: round2(db.users.find((x) => x.id === u.id).transactions.filter((t) => t.type === "send" && t.status !== "failed").reduce((a, t) => a + t.amount, 0)),
-    }));
-
-    const transactions = [];
-    for (const user of db.users) {
-      for (const t of user.transactions) {
-        if (t.type !== "send") continue;
-        transactions.push({ id: t.id, user: user.name, corridor: `CAD ▸ ${t.currency}`, amount: t.amount, fee: t.fee, spreadRevenue: t.spreadRevenue, status: t.status, createdAt: t.createdAt });
-      }
-    }
-    transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-    const buckets = new Map();
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date();
-      d.setMonth(d.getMonth() - i);
-      const key = d.toLocaleDateString("en-CA", { month: "short" });
-      buckets.set(key, { month: key, fees: 0, spread: 0, volume: 0, transfers: 0 });
-    }
-    for (const t of transactions) {
-      if (t.status === "failed") continue;
-      const key = monthKey(t.createdAt);
-      const b = buckets.get(key);
-      if (!b) continue;
-      b.fees = round2(b.fees + t.fee);
-      b.spread = round2(b.spread + t.spreadRevenue);
-      b.volume = round2(b.volume + t.amount);
-      b.transfers += 1;
-    }
-
-    return { users, transactions, revenue: [...buckets.values()] };
+    return request("/api/admin/data", { auth: true });
   },
 
   async adminCreateUser(u) {
-    await wait(500);
-    return withDB(async (db) => {
-      const salt = randomSalt();
-      const passwordHash = await hashPassword(u.password || uid("pw"), salt);
-      const user = {
-        id: uid("usr"), name: u.name, email: u.email, phone: u.phone || "", country: u.country || "Canada",
-        role: u.role || "user", kyc: u.kyc || "unverified", status: u.status || "active", joined: new Date().toISOString(),
-        passwordSalt: salt, passwordHash,
-        wallet: { balance: 0, currency: "CAD" }, beneficiaries: [], transactions: [],
-      };
-      db.users.push(user);
-      return toPublicUser(user);
-    });
+    return request("/api/admin/users", { method: "POST", auth: true, body: u });
   },
 
   async adminUpdateUser(id, patch) {
-    await wait(400);
-    return withDB(async (db) => {
-      const user = db.users.find((u) => u.id === id);
-      if (!user) throw new Error("User not found.");
-      Object.assign(user, patch);
-      return { id, patch };
-    });
+    return request(`/api/admin/users/${id}`, { method: "PATCH", auth: true, body: patch });
   },
 
   async adminDeleteUser(id) {
-    await wait(400);
-    return withDB(async (db) => {
-      db.users = db.users.filter((u) => u.id !== id);
-      return id;
-    });
+    const { id: removedId } = await request(`/api/admin/users/${id}`, { method: "DELETE", auth: true });
+    return removedId;
   },
 };

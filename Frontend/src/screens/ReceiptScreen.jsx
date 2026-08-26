@@ -4,6 +4,7 @@ import { Check, ChevronLeft, Copy, X } from "lucide-react";
 import { T, TONE, STATUS_TONE, MONO } from "../lib/theme.jsx";
 import { money, fullDate, rateFmt } from "../lib/format.js";
 import { PAYOUT_METHODS } from "../lib/constants.js";
+import { OUTFLOW_TYPES } from "../components/primitives.jsx";
 import { useStore } from "../store/context.jsx";
 import { select } from "../store/selectors.js";
 
@@ -19,9 +20,10 @@ export default function ReceiptScreen() {
 
   if (!tx) return null;
 
-  const out = tx.type === "send";
+  const out = OUTFLOW_TYPES.has(tx.type);
+  const abroad = tx.type === "send";
   const tone = TONE[STATUS_TONE[tx.status]] || TONE.muted;
-  const rows = out
+  const rows = abroad
     ? [
         ["Recipient", tx.name],
         ["Amount sent", money(tx.amount)],
@@ -30,7 +32,7 @@ export default function ReceiptScreen() {
         ["Rate", tx.rate ? `1 CAD = ${rateFmt(tx.rate)} ${tx.currency}` : "—"],
         ["Method", PAYOUT_METHODS.find((m) => m.id === tx.method)?.label || tx.method],
       ]
-    : [["Description", tx.name], ["Amount", money(tx.amount)]];
+    : [["Description", tx.name], ["Amount", money(tx.amount, tx.currency)]];
 
   return (
     <div className="flex flex-col heha-rise" style={{ minHeight: "100%" }}>

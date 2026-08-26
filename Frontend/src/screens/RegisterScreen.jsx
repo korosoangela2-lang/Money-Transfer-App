@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, ChevronLeft, Eye, EyeOff } from "lucide-react";
-import { T } from "../lib/theme.jsx";
+import { T, DISPLAY } from "../lib/theme.jsx";
 import { Button, TextInput, Field } from "../components/primitives.jsx";
+import { AuthSplit } from "../components/AuthSplit.jsx";
 import { inputStyle } from "../lib/theme.jsx";
 import { useStore } from "../store/context.jsx";
 import { api } from "../lib/api.js";
@@ -31,12 +32,12 @@ export default function RegisterScreen() {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-6 heha-rise" style={{ minHeight: "100%" }}>
-      <div className="flex items-center gap-3 mt-4">
+    <AuthSplit>
+      <div className="flex items-center gap-3">
         <button onClick={() => navigate("/login")} style={{ color: T.muted }}>
           <ChevronLeft size={20} />
         </button>
-        <div className="text-lg font-semibold">Create your account</div>
+        <div className="text-3xl" style={{ fontFamily: DISPLAY, fontWeight: 600 }}>Create your account</div>
       </div>
       <form className="flex flex-col gap-4" onSubmit={submit}>
         <Field label="Full name">
@@ -68,6 +69,6 @@ export default function RegisterScreen() {
         )}
         <Button type="submit" full loading={busy}>Create account</Button>
       </form>
-    </div>
+    </AuthSplit>
   );
 }

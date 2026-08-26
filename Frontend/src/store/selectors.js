@@ -1,6 +1,7 @@
 import { round2, monthKey } from "../lib/format.js";
 import { CORRIDORS } from "../lib/constants.js";
 import { PRICING } from "../lib/pricing.js";
+import { OUTFLOW_TYPES } from "../components/primitives.jsx";
 
 export const select = {
   user: (s) => s.auth.user,
@@ -25,7 +26,7 @@ export const select = {
       const k = monthKey(t.createdAt);
       if (!buckets.has(k) || t.status === "failed") return;
       const b = buckets.get(k);
-      if (t.type === "send") b.sent = round2(b.sent + t.amount + t.fee);
+      if (OUTFLOW_TYPES.has(t.type)) b.sent = round2(b.sent + t.amount + t.fee);
       else b.added = round2(b.added + t.amount);
     });
     return [...buckets.values()];

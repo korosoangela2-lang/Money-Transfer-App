@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Trash2 } from "lucide-react";
-import { T, inputStyle } from "../lib/theme.jsx";
+import { T, inputStyle, cardStyle } from "../lib/theme.jsx";
 import { CORRIDORS, PAYOUT_METHODS } from "../lib/constants.js";
 import { Button, TextInput, Field, ScreenHeader } from "../components/primitives.jsx";
 import { useStore } from "../store/context.jsx";
@@ -9,8 +9,7 @@ import { select } from "../store/selectors.js";
 import { api } from "../lib/api.js";
 
 function AddBeneficiaryForm({ onDone }) {
-  const { state, dispatch } = useStore();
-  const userId = select.user(state)?.id;
+  const { dispatch } = useStore();
   const [name, setName] = useState("");
   const [relation, setRelation] = useState("");
   const [currency, setCurrency] = useState("KES");
@@ -21,18 +20,23 @@ function AddBeneficiaryForm({ onDone }) {
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true);
-    const corridor = CORRIDORS.find((c) => c.code === currency);
-    const b = await api.addBeneficiary(userId, {
-      name, relation, currency, country: corridor.country, flag: corridor.flag,
-      method, account, bank: PAYOUT_METHODS.find((m) => m.id === method)?.label,
-    });
-    dispatch({ type: "beneficiaries/added", payload: b });
-    setBusy(false);
-    onDone();
+    try {
+      const corridor = CORRIDORS.find((c) => c.code === currency);
+      const b = await api.addBeneficiary({
+        name, relation, currency, country: corridor.country, flag: corridor.flag,
+        method, account, bank: PAYOUT_METHODS.find((m) => m.id === method)?.label,
+      });
+      dispatch({ type: "beneficiaries/added", payload: b });
+      onDone();
+    } catch (err) {
+      dispatch({ type: "ui/toastShown", payload: { message: err.message, tone: "error" } });
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
-    <form className="flex flex-col gap-3 p-4 rounded-xl mb-1" style={{ background: T.surface, border: `1px solid ${T.line}` }} onSubmit={submit}>
+    <form className="flex flex-col gap-3 p-4 mb-1" style={cardStyle} onSubmit={submit}>
       <Field label="Full name"><TextInput required value={name} onChange={(e) => setName(e.target.value)} /></Field>
       <Field label="Relation"><TextInput value={relation} onChange={(e) => setRelation(e.target.value)} placeholder="Mother, Brother…" /></Field>
       <Field label="Country">
@@ -54,14 +58,17 @@ function AddBeneficiaryForm({ onDone }) {
 export default function BeneficiariesScreen() {
   const { state, dispatch } = useStore();
   const navigate = useNavigate();
-  const userId = select.user(state)?.id;
   const items = select.beneficiaries(state);
   const [adding, setAdding] = useState(false);
 
   const remove = async (id) => {
-    await api.removeBeneficiary(userId, id);
-    dispatch({ type: "beneficiaries/removed", payload: id });
-    dispatch({ type: "ui/toastShown", payload: { message: "Beneficiary removed" } });
+    try {
+      await api.removeBeneficiary(id);
+      dispatch({ type: "beneficiaries/removed", payload: id });
+      dispatch({ type: "ui/toastShown", payload: { message: "Beneficiary removed" } });
+    } catch (err) {
+      dispatch({ type: "ui/toastShown", payload: { message: err.message, tone: "error" } });
+    }
   };
 
   return (
@@ -76,7 +83,7 @@ export default function BeneficiariesScreen() {
           <div className="text-sm text-center py-10" style={{ color: T.faint }}>No beneficiaries yet.</div>
         )}
         {items.map((b) => (
-          <div key={b.id} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: T.surface, border: `1px solid ${T.line}` }}>
+          <div key={b.id} className="flex items-center gap-3 p-3" style={cardStyle}>
             <div className="text-xl">{b.flag}</div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium truncate">{b.name}</div>

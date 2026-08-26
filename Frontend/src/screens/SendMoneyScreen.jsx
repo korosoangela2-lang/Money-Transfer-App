@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, Check, Send } from "lucide-react";
+import { AlertCircle, Check, Send, User } from "lucide-react";
 import { T, inputStyle } from "../lib/theme.jsx";
 import { money, rateFmt } from "../lib/format.js";
 import { PAYOUT_METHODS } from "../lib/constants.js";
 import { quote } from "../lib/pricing.js";
 import { Button, TextInput, Field, ScreenHeader } from "../components/primitives.jsx";
+import { BRAND_NAME } from "../lib/brand.js";
 import { useStore } from "../store/context.jsx";
 import { select } from "../store/selectors.js";
 import { api } from "../lib/api.js";
@@ -13,8 +14,80 @@ import { api } from "../lib/api.js";
 export default function SendMoneyScreen() {
   const { state, dispatch } = useStore();
   const navigate = useNavigate();
-  const userId = select.user(state)?.id;
   const beneficiaries = select.beneficiaries(state);
+  const balance = select.balance(state);
+  const [mode, setMode] = useState("abroad"); // "abroad" | "user"
+
+  const modeToggle = (
+    <div className="flex gap-1 p-1 rounded-xl" style={{ background: T.paper }}>
+      {[["abroad", "Send abroad"], ["user", `To a ${BRAND_NAME} user`]].map(([id, label]) => (
+        <button
+          key={id} type="button" onClick={() => setMode(id)}
+          className="flex-1 py-2 rounded-lg text-xs font-semibold"
+          style={{ background: mode === id ? T.surface : "transparent", color: mode === id ? T.ink : T.muted, boxShadow: mode === id ? "0 1px 2px rgba(0,0,0,0.06)" : "none" }}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (mode === "user") {
+    return (
+      <ScreenHeader title="Send money" onBack={() => navigate("/home")}>
+        <div className="flex flex-col gap-4 p-5 pt-2">
+          {modeToggle}
+          <SendToUserForm balance={balance} dispatch={dispatch} navigate={navigate} />
+        </div>
+      </ScreenHeader>
+    );
+  }
+
+  return (
+    <SendAbroadForm beneficiaries={beneficiaries} balance={balance} state={state} dispatch={dispatch} navigate={navigate} modeToggle={modeToggle} />
+  );
+}
+
+function SendToUserForm({ balance, dispatch, navigate }) {
+  const [payId, setPayId] = useState("");
+  const [amount, setAmount] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    const amt = Number(amount);
+    if (!payId) return setError("Enter their Pay ID (email).");
+    if (!amt || amt <= 0) return setError("Enter an amount to send.");
+    if (amt > balance) return setError("That's more than your wallet balance.");
+    setBusy(true); setError(null);
+    try {
+      const tx = await api.sendToUser({ email: payId, amount: amt });
+      dispatch({ type: "transactions/p2pSent", payload: tx });
+      navigate(`/receipt/${tx.id}`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form className="flex flex-col gap-4" onSubmit={submit}>
+      <Field label="Their Pay ID (email)">
+        <TextInput type="email" required value={payId} onChange={(e) => setPayId(e.target.value)} placeholder="name@example.com" />
+      </Field>
+      <Field label="Amount (CAD)">
+        <TextInput type="number" min="0" step="0.01" required value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" />
+      </Field>
+      <div className="text-xs" style={{ color: T.faint }}>Sent instantly, wallet to wallet — no fee, no exchange rate.</div>
+      {error && <div className="flex items-center gap-2 text-xs" style={{ color: T.brick }}><AlertCircle size={14} />{error}</div>}
+      <Button type="submit" full loading={busy} icon={User}>Send {amount ? money(Number(amount)) : ""}</Button>
+    </form>
+  );
+}
+
+function SendAbroadForm({ beneficiaries, balance, state, dispatch, navigate, modeToggle }) {
   const [beneficiaryId, setBeneficiaryId] = useState(beneficiaries[0]?.id || "");
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("mobile");
@@ -24,14 +97,16 @@ export default function SendMoneyScreen() {
   const beneficiary = select.beneficiaryById(state, beneficiaryId);
   const rate = beneficiary ? select.rate(state, beneficiary.currency) : 1;
   const q = useMemo(() => quote(amount, rate), [amount, rate]);
-  const balance = select.balance(state);
 
   if (beneficiaries.length === 0) {
     return (
       <ScreenHeader title="Send money" onBack={() => navigate("/home")}>
-        <div className="flex flex-col items-center gap-3 p-8 text-center">
-          <div className="text-sm" style={{ color: T.muted }}>Add a beneficiary before you send money.</div>
-          <Button onClick={() => navigate("/beneficiaries")}>Add beneficiary</Button>
+        <div className="flex flex-col gap-4 p-5 pt-2">
+          {modeToggle}
+          <div className="flex flex-col items-center gap-3 p-8 text-center">
+            <div className="text-sm" style={{ color: T.muted }}>Add a beneficiary before you send money.</div>
+            <Button onClick={() => navigate("/beneficiaries")}>Add beneficiary</Button>
+          </div>
         </div>
       </ScreenHeader>
     );
@@ -43,7 +118,7 @@ export default function SendMoneyScreen() {
     if (q.total > balance) return setError("That's more than your wallet balance.");
     setBusy(true); setError(null);
     try {
-      const tx = await api.sendMoney(userId, { beneficiary, q, method });
+      const tx = await api.sendMoney({ beneficiary, q, method });
       dispatch({ type: "transactions/transferRecorded", payload: tx });
       navigate(`/receipt/${tx.id}`);
     } catch (err) {
@@ -56,6 +131,7 @@ export default function SendMoneyScreen() {
   return (
     <ScreenHeader title="Send money" onBack={() => navigate("/home")}>
       <div className="flex flex-col gap-4 p-5 pt-2">
+        {modeToggle}
         <Field label="To">
           <select value={beneficiaryId} onChange={(e) => setBeneficiaryId(e.target.value)} style={inputStyle}>
             {beneficiaries.map((b) => <option key={b.id} value={b.id}>{b.flag} {b.name}</option>)}
