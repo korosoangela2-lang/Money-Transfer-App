@@ -84,7 +84,7 @@ export default function BeneficiariesScreen() {
             </div>
             <button onClick={() => remove(b.id)} style={{ color: T.faint }}><Trash2 size={16} /></button>
           </div>
-        ))}
+        ))} 
       </div>
     </ScreenHeader>
   );
