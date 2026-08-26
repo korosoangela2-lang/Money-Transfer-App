@@ -19,16 +19,26 @@ export default function ProfileScreen() {
   const save = async (e) => {
     e.preventDefault();
     setBusy(true);
-    const patch = await api.updateProfile(user.id, { name, email });
-    dispatch({ type: "auth/profileUpdated", payload: patch });
-    dispatch({ type: "ui/toastShown", payload: { message: "Profile updated" } });
-    setBusy(false);
+    try {
+      const patch = await api.updateProfile({ name, email });
+      dispatch({ type: "auth/profileUpdated", payload: patch });
+      dispatch({ type: "ui/toastShown", payload: { message: "Profile updated" } });
+    } catch (err) {
+      dispatch({ type: "ui/toastShown", payload: { message: err.message, tone: "error" } });
+    } finally {
+      setBusy(false);
+    }
   };
 
   const logout = async () => {
-    await api.logout();
-    dispatch({ type: "auth/loggedOut" });
-    navigate("/login", { replace: true });
+    try {
+      await api.logout();
+    } catch {
+      // local token is cleared regardless; proceed to logged-out state
+    } finally {
+      dispatch({ type: "auth/loggedOut" });
+      navigate("/login", { replace: true });
+    }
   };
 
   return (

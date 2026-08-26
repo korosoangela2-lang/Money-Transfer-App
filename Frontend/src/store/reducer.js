@@ -7,7 +7,7 @@ export const initialState = {
   rates: { pairs: BASE_RATES, updatedAt: null, ticking: false },
   beneficiaries: { items: [], status: "idle", error: null },
   transactions: { items: [], status: "idle", error: null },
-  admin: { users: [], transactions: [], revenue: [], status: "idle" },
+  admin: { users: [], transactions: [], revenue: [], status: "idle", error: null },
   ui: { toast: null },
 };
 
@@ -47,10 +47,22 @@ export function reducer(state, action) {
         wallet: { ...state.wallet, balance: round2(state.wallet.balance + payload.amount) },
         transactions: { ...state.transactions, items: [payload, ...state.transactions.items] },
       };
+    case "wallet/fundsWithdrawn":
+      return {
+        ...state,
+        wallet: { ...state.wallet, balance: round2(state.wallet.balance - payload.amount) },
+        transactions: { ...state.transactions, items: [payload, ...state.transactions.items] },
+      };
     case "transactions/transferRecorded":
       return {
         ...state,
         wallet: { ...state.wallet, balance: round2(state.wallet.balance - payload.amount - payload.fee) },
+        transactions: { ...state.transactions, items: [payload, ...state.transactions.items] },
+      };
+    case "transactions/p2pSent":
+      return {
+        ...state,
+        wallet: { ...state.wallet, balance: round2(state.wallet.balance - payload.amount) },
         transactions: { ...state.transactions, items: [payload, ...state.transactions.items] },
       };
     case "transactions/statusChanged":
@@ -70,7 +82,11 @@ export function reducer(state, action) {
 
     /* admin */
     case "admin/dataReceived":
-      return { ...state, admin: { ...payload, status: "succeeded" } };
+      return { ...state, admin: { ...payload, status: "succeeded", error: null } };
+    case "admin/dataFailed":
+      return { ...state, admin: { ...state.admin, status: "failed", error: payload } };
+    case "admin/dataReset":
+      return { ...state, admin: { ...state.admin, status: "idle", error: null } };
     case "admin/userCreated":
       return { ...state, admin: { ...state.admin, users: [payload, ...state.admin.users] } };
     case "admin/userUpdated":

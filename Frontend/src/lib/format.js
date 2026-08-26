@@ -22,8 +22,4 @@ export const monthKey = (iso) => new Date(iso).toLocaleDateString("en-CA", { mon
 export const initials = (name = "") =>
   name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
-export const uid = (prefix) => `${prefix}_${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-
 export const round2 = (n) => Math.round(n * 100) / 100;
-
-export const daysAgo = (d) => new Date(Date.now() - d * 86400000).toISOString();

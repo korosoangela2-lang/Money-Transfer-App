@@ -1,10 +1,13 @@
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Home, Users, Receipt, TrendingUp, LogOut, Loader2 } from "lucide-react";
 import { T } from "../../lib/theme.jsx";
 import { Button } from "../../components/primitives.jsx";
+import { Logo } from "../../components/Logo.jsx";
+import { BRAND_NAME } from "../../lib/brand.js";
 import { useStore } from "../../store/context.jsx";
 import { api } from "../../lib/api.js";
+import { LoadingScreen } from "../../components/LoadingScreen.jsx";
 
 const ADMIN_NAV = [
   { path: "/admin", label: "Overview", icon: Home },
@@ -20,15 +23,31 @@ export default function AdminShell() {
 
   useEffect(() => {
     if (state.admin.status === "idle") {
-      api.adminData().then((d) => dispatch({ type: "admin/dataReceived", payload: d }));
+      api.adminData()
+        .then((d) => dispatch({ type: "admin/dataReceived", payload: d }))
+        .catch((err) => dispatch({ type: "admin/dataFailed", payload: err.message }));
     }
   }, [state.admin.status]);
 
   const logout = async () => {
-    await api.logout();
-    dispatch({ type: "auth/loggedOut" });
-    navigate("/login", { replace: true });
+    try {
+      await api.logout();
+    } catch {
+      // local token is cleared regardless; proceed to logged-out state
+    } finally {
+      dispatch({ type: "auth/loggedOut" });
+      navigate("/login", { replace: true });
+    }
   };
+
+  if (state.admin.status === "failed") {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3" style={{ height: "100vh" }}>
+        <div className="text-sm" style={{ color: T.muted }}>{state.admin.error || "Couldn't load admin data."}</div>
+        <Button size="sm" onClick={() => dispatch({ type: "admin/dataReset" })}>Retry</Button>
+      </div>
+    );
+  }
 
   if (state.admin.status !== "succeeded") {
     return (
@@ -41,7 +60,7 @@ export default function AdminShell() {
   return (
     <div className="flex" style={{ minHeight: "100vh" }}>
       <div className="flex flex-col gap-1 p-4" style={{ width: 216, borderRight: `1px solid ${T.line}`, background: T.surface }}>
-        <div className="text-lg font-semibold px-2 pb-4" style={{ color: T.pine }}>Heha Admin</div>
+        <Logo size={24} textSize={16} wordmark={`${BRAND_NAME} Admin`} className="px-2 pb-4" />
         {ADMIN_NAV.map(({ path, label, icon: Icon }) => (
           <button
             key={path}
@@ -57,7 +76,9 @@ export default function AdminShell() {
         </div>
       </div>
       <div className="heha-scroll flex-1 overflow-y-auto p-8">
-        <Outlet />
+        <Suspense fallback={<LoadingScreen />}>
+          <Outlet />
+        </Suspense>
       </div>
     </div>
   );

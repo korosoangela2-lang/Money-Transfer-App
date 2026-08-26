@@ -1,14 +1,14 @@
 import { useEffect } from "react";
 import { ArrowUpRight, ArrowDownLeft, ChevronLeft, Loader2 } from "lucide-react";
-import { T, TONE, STATUS_TONE, inputStyle } from "../lib/theme.jsx";
+import { T, TONE, STATUS_TONE, inputStyle, cardStyle, shadow } from "../lib/theme.jsx";
 import { money, shortDate } from "../lib/format.js";
 import { useStore } from "../store/context.jsx";
 
 export const Button = ({ children, variant = "primary", size = "md", full, icon: Icon, disabled, loading, style, ...rest }) => {
   const sizes = { sm: "px-3 py-2 text-xs", md: "px-4 py-3 text-sm", lg: "px-5 py-4 text-sm" };
   const styles = {
-    primary: { background: T.pine, color: "#fff", border: `1px solid ${T.pine}` },
-    dark: { background: T.ink, color: "#fff", border: `1px solid ${T.ink}` },
+    primary: { background: T.pine, color: "#fff", border: `1px solid ${T.pine}`, boxShadow: shadow.sm },
+    dark: { background: T.ink, color: "#fff", border: `1px solid ${T.ink}`, boxShadow: shadow.sm },
     ghost: { background: "transparent", color: T.ink, border: `1px solid ${T.line}` },
     quiet: { background: "transparent", color: T.muted, border: `1px solid transparent` },
     danger: { background: T.brickSoft, color: T.brick, border: `1px solid ${T.brickSoft}` },
@@ -63,10 +63,12 @@ export const Pill = ({ tone = "muted", children }) => {
 
 export const StatusPill = ({ status }) => <Pill tone={STATUS_TONE[status] || "muted"}>{status}</Pill>;
 
+export const OUTFLOW_TYPES = new Set(["send", "p2p_out", "withdrawal"]);
+
 export const TxRow = ({ tx, onClick }) => {
-  const out = tx.type === "send";
+  const out = OUTFLOW_TYPES.has(tx.type);
   return (
-    <button onClick={onClick} className="flex items-center gap-3 p-3 rounded-xl w-full text-left" style={{ background: T.surface, border: `1px solid ${T.line}` }}>
+    <button onClick={onClick} className="heha-card flex items-center gap-3 p-3 w-full text-left" style={cardStyle}>
       <div className="rounded-full flex items-center justify-center" style={{ width: 34, height: 34, background: out ? T.brickSoft : T.pineSoft, color: out ? T.brick : T.pine, flexShrink: 0 }}>
         {out ? <ArrowUpRight size={16} /> : <ArrowDownLeft size={16} />}
       </div>
