@@ -95,7 +95,7 @@ export const api = {
     });
   },
 
-  /** Sends CAD straight into another Heha user's wallet, identified by their Pay ID (email). */
+  /** Sends CAD straight into another Halcyon user's wallet, identified by their Pay ID (email). */
   async sendToUser({ email, amount }) {
     return request("/api/transfers/to-user", { method: "POST", auth: true, body: { email, amount } });
   },

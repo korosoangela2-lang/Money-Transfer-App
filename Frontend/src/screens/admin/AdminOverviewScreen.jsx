@@ -18,7 +18,7 @@ export default function AdminOverviewScreen() {
     ["Take rate", `${stats.takeRate.toFixed(2)}%`, TrendingUp],
   ];
   return (
-    <div className="flex flex-col gap-6 heha-rise">
+    <div className="flex flex-col gap-6 halcyon-rise">
       <div>
         <div className="text-xl font-semibold">Overview</div>
         <div className="text-sm" style={{ color: T.muted }}>Platform health at a glance.</div>

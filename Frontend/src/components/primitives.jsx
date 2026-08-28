@@ -20,14 +20,14 @@ export const Button = ({ children, variant = "primary", size = "md", full, icon:
       style={{ ...styles[variant], opacity: disabled || loading ? 0.5 : 1, letterSpacing: "0.01em", ...style }}
       {...rest}
     >
-      {loading ? <Loader2 size={15} className="heha-spin" /> : Icon ? <Icon size={15} /> : null}
+      {loading ? <Loader2 size={15} className="halcyon-spin" /> : Icon ? <Icon size={15} /> : null}
       {children}
     </button>
   );
 };
 
 export const TextInput = ({ style, className, ...rest }) => (
-  <input {...rest} style={{ ...inputStyle, ...style }} className={`heha-input ${className || ""}`} />
+  <input {...rest} style={{ ...inputStyle, ...style }} className={`halcyon-input ${className || ""}`} />
 );
 
 export const Field = ({ label, children }) => (
@@ -38,7 +38,7 @@ export const Field = ({ label, children }) => (
 );
 
 export const ScreenHeader = ({ title, onBack, right, children }) => (
-  <div className="flex flex-col heha-rise" style={{ minHeight: "100%" }}>
+  <div className="flex flex-col halcyon-rise" style={{ minHeight: "100%" }}>
     <div className="flex items-center gap-3 px-5 pt-5 pb-2">
       {onBack && (
         <button onClick={onBack} style={{ color: T.muted }}>
@@ -68,7 +68,7 @@ export const OUTFLOW_TYPES = new Set(["send", "p2p_out", "withdrawal"]);
 export const TxRow = ({ tx, onClick }) => {
   const out = OUTFLOW_TYPES.has(tx.type);
   return (
-    <button onClick={onClick} className="heha-card flex items-center gap-3 p-3 w-full text-left" style={cardStyle}>
+    <button onClick={onClick} className="halcyon-card flex items-center gap-3 p-3 w-full text-left" style={cardStyle}>
       <div className="rounded-full flex items-center justify-center" style={{ width: 34, height: 34, background: out ? T.brickSoft : T.pineSoft, color: out ? T.brick : T.pine, flexShrink: 0 }}>
         {out ? <ArrowUpRight size={16} /> : <ArrowDownLeft size={16} />}
       </div>
@@ -84,6 +84,28 @@ export const TxRow = ({ tx, onClick }) => {
   );
 };
 
+export function Modal({ title, onClose, children, width = 420 }) {
+  return (
+    <div
+      onClick={onClose}
+      className="flex items-center justify-center halcyon-rise"
+      style={{ position: "fixed", inset: 0, background: "rgba(18,22,31,0.4)", zIndex: 90 }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="flex flex-col gap-4 rounded-2xl p-5"
+        style={{ ...cardStyle, width, maxHeight: "88vh", overflowY: "auto" }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="text-base font-semibold">{title}</div>
+          <button onClick={onClose} style={{ color: T.faint }}>✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export function Toast() {
   const { state, dispatch } = useStore();
   const toast = state.ui.toast;
@@ -96,7 +118,7 @@ export function Toast() {
   const c = TONE[toast.tone === "error" ? "brick" : "pine"];
   return (
     <div
-      className="heha-rise"
+      className="halcyon-rise"
       style={{
         position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
         background: T.ink, color: "#fff", padding: "10px 16px", borderRadius: 12,

@@ -31,6 +31,7 @@ const AdminOverviewScreen = lazy(() => import("./screens/admin/AdminOverviewScre
 const AdminUsersScreen = lazy(() => import("./screens/admin/AdminUsersScreen.jsx"));
 const AdminTransactionsScreen = lazy(() => import("./screens/admin/AdminTransactionsScreen.jsx"));
 const AdminRevenueScreen = lazy(() => import("./screens/admin/AdminRevenueScreen.jsx"));
+const AdminWalletsScreen = lazy(() => import("./screens/admin/AdminWalletsScreen.jsx"));
 
 function RootRedirect() {
   const { state } = useStore();
@@ -58,9 +59,9 @@ function RequireAuth({ role }) {
 
 function AppShell() {
   return (
-    <div className="heha heha-bg flex min-h-screen w-full relative overflow-hidden" style={{ fontFamily: SANS, color: T.ink }}>
+    <div className="halcyon halcyon-bg flex min-h-screen w-full relative overflow-hidden" style={{ fontFamily: SANS, color: T.ink }}>
       <BackgroundArt tone="light" />
-      <div className="heha-page relative" style={{ zIndex: 1 }}><Outlet /></div>
+      <div className="halcyon-page relative" style={{ zIndex: 1 }}><Outlet /></div>
       <Toast />
     </div>
   );
@@ -69,7 +70,7 @@ function AppShell() {
 /** Login/register don't manage their own scroll region (unlike UserShell), so they get one here. */
 function AuthLayout() {
   return (
-    <div className="heha-scroll flex-1 overflow-y-auto">
+    <div className="halcyon-scroll flex-1 overflow-y-auto">
       <Outlet />
     </div>
   );
@@ -129,6 +130,7 @@ export default function App() {
                 <Route index element={<AdminOverviewScreen />} />
                 <Route path="users" element={<AdminUsersScreen />} />
                 <Route path="transactions" element={<AdminTransactionsScreen />} />
+                <Route path="wallets" element={<AdminWalletsScreen />} />
                 <Route path="revenue" element={<AdminRevenueScreen />} />
               </Route>
             </Route>

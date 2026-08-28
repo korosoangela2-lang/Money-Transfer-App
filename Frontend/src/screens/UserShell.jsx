@@ -63,8 +63,8 @@ export default function UserShell() {
           </button>
         </div>
       )}
-      <div className="heha-scroll flex-1 overflow-y-auto">
-        <div className="heha-container">
+      <div className="halcyon-scroll flex-1 overflow-y-auto">
+        <div className="halcyon-container">
           <Suspense fallback={<LoadingScreen />}>
             <Outlet />
           </Suspense>

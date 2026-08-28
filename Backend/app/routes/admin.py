@@ -111,6 +111,15 @@ def update_user(user_id):
         for key in ("name", "phone", "country", "role", "kyc", "status"):
             if key in patch and patch[key] is not None:
                 user[key] = patch[key]
+        if "balance" in patch and patch["balance"] is not None:
+            try:
+                balance = round2(float(patch["balance"]))
+            except (TypeError, ValueError):
+                return jsonify({"error": "Balance must be a number."}), 400
+            if balance < 0:
+                return jsonify({"error": "Balance can't be negative."}), 400
+            user["wallet"]["balance"] = balance
+            patch["balance"] = balance
 
     return jsonify({"id": user_id, "patch": patch})
 

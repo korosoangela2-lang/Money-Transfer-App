@@ -53,6 +53,54 @@ export const select = {
     return { sent, fees, saved, count: sends.length, avgFeePct: sent ? (fees / sent) * 100 : 0 };
   },
 
+  /** Wallet-account analytics for the admin wallets view: distribution, concentration, top holders. */
+  adminWalletAnalytics: (s) => {
+    const users = s.admin.users;
+    const balances = users.map((u) => u.balance).sort((a, b) => a - b);
+    const total = round2(balances.reduce((a, b) => a + b, 0));
+    const count = balances.length;
+    const avg = count ? round2(total / count) : 0;
+    const mid = Math.floor(count / 2);
+    const median = count ? (count % 2 ? balances[mid] : round2((balances[mid - 1] + balances[mid]) / 2)) : 0;
+
+    const bands = [
+      { label: "$0", test: (b) => b === 0 },
+      { label: "$1–100", test: (b) => b > 0 && b <= 100 },
+      { label: "$100–500", test: (b) => b > 100 && b <= 500 },
+      { label: "$500–1,000", test: (b) => b > 500 && b <= 1000 },
+      { label: "$1,000+", test: (b) => b > 1000 },
+    ];
+    const distribution = bands.map(({ label, test }) => ({ label, count: balances.filter(test).length }));
+
+    const topHolders = [...users].sort((a, b) => b.balance - a.balance).slice(0, 8);
+
+    return {
+      total,
+      avg,
+      median,
+      count,
+      zeroBalance: balances.filter((b) => b === 0).length,
+      distribution,
+      topHolders,
+    };
+  },
+
+  /** Aggregate stats for the admin transactions view: volume, revenue, and status mix. */
+  adminTxSummary: (s) => {
+    const txs = s.admin.transactions;
+    const completed = txs.filter((t) => t.status !== "failed");
+    const volume = round2(completed.reduce((a, t) => a + t.amount, 0));
+    const revenue = round2(completed.reduce((a, t) => a + t.fee + t.spreadRevenue, 0));
+    const byStatus = txs.reduce((acc, t) => ({ ...acc, [t.status]: (acc[t.status] || 0) + 1 }), {});
+    return {
+      count: txs.length,
+      volume,
+      revenue,
+      avgAmount: completed.length ? round2(volume / completed.length) : 0,
+      byStatus,
+    };
+  },
+
   /** Platform-wide numbers for the admin overview. */
   adminStats: (s) => {
     const users = s.admin.users;

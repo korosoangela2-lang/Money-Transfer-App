@@ -22,7 +22,7 @@ export default function HomeScreen() {
   const PIE_COLORS = [T.pine, T.marigold, T.brick, T.muted];
 
   return (
-    <div className="flex flex-col gap-5 p-5 pb-6 heha-rise">
+    <div className="flex flex-col gap-5 p-5 pb-6 halcyon-rise">
       <div className="flex items-center justify-between">
         <div>
           <div className="text-xs" style={{ color: T.muted }}>Welcome back</div>
@@ -39,7 +39,7 @@ export default function HomeScreen() {
           <span className="text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>Wallet balance</span>
           <Shield size={14} style={{ color: "rgba(255,255,255,0.5)" }} />
         </div>
-        <div className="text-4xl heha-tick relative" style={{ fontFamily: DISPLAY, fontWeight: 600 }}>{money(balance)}</div>
+        <div className="text-4xl halcyon-tick relative" style={{ fontFamily: DISPLAY, fontWeight: 600 }}>{money(balance)}</div>
         <div className="flex gap-2 relative">
           <Button size="sm" icon={Plus} onClick={() => navigate("/add-funds")} style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)", color: "#fff" }}>
             Add funds

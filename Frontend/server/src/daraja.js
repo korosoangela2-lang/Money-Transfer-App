@@ -55,8 +55,8 @@ export async function stkPush({ phone, amount, accountReference, description }) 
       PartyB: DARAJA_SHORTCODE,
       PhoneNumber: msisdn,
       CallBackURL: DARAJA_CALLBACK_URL,
-      AccountReference: accountReference || "Heha",
-      TransactionDesc: description || "Heha wallet top-up",
+      AccountReference: accountReference || "Halcyon",
+      TransactionDesc: description || "Halcyon wallet top-up",
     }),
   });
   const data = await res.json();

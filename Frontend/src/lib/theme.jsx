@@ -29,12 +29,12 @@ export const cardStyle = { background: T.surface, border: `1px solid ${T.line}`,
 
 const GLOBAL_STYLE_CSS = `
     @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
-    .heha * { box-sizing: border-box; }
-    .heha button { font-family: inherit; cursor: pointer; }
-    .heha input, .heha select { font-family: inherit; }
-    .heha :focus-visible { outline: 2px solid ${T.marigold}; outline-offset: 2px; border-radius: 4px; }
-    .heha input::placeholder { color: ${T.faint}; }
-    .heha-bg {
+    .halcyon * { box-sizing: border-box; }
+    .halcyon button { font-family: inherit; cursor: pointer; }
+    .halcyon input, .halcyon select { font-family: inherit; }
+    .halcyon :focus-visible { outline: 2px solid ${T.marigold}; outline-offset: 2px; border-radius: 4px; }
+    .halcyon input::placeholder { color: ${T.faint}; }
+    .halcyon-bg {
       background-color: ${T.bg};
       background-image:
         radial-gradient(820px circle at 6% -10%, rgba(10,95,79,0.20), transparent 60%),
@@ -46,26 +46,26 @@ const GLOBAL_STYLE_CSS = `
       background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
       background-blend-mode: normal, normal, normal, normal, normal, overlay;
     }
-    .heha-page { display: flex; flex-direction: column; width: 100%; flex: 1; min-width: 0; }
-    .heha-container { display: flex; flex-direction: column; width: 100%; max-width: 720px; min-height: 100%; margin: 0 auto; }
-    .heha-link { color: ${T.pine}; text-decoration: none; }
-    .heha-link:hover { text-decoration: underline; }
-    .heha-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-    .heha-scroll::-webkit-scrollbar-thumb { background: ${T.line}; border-radius: 99px; }
-    .heha button { transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease, background-color .15s ease; }
-    .heha button:hover:not(:disabled) { transform: translateY(-1px); }
-    .heha button:active:not(:disabled) { transform: translateY(0); }
-    .heha-card { transition: transform .18s ease, box-shadow .18s ease; }
-    a.heha-card:hover, button.heha-card:hover { transform: translateY(-2px); box-shadow: ${shadow.md}; }
-    @keyframes heha-tick { 0% { opacity: .35; transform: translateY(-2px); } 100% { opacity: 1; transform: none; } }
-    @keyframes heha-rise { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: none; } }
-    @keyframes heha-spin { to { transform: rotate(360deg); } }
-    @keyframes heha-crawl { to { background-position: 14px 0; } }
-    .heha-tick { animation: heha-tick .28s ease-out; }
-    .heha-rise { animation: heha-rise .3s ease-out both; }
-    .heha-spin { animation: heha-spin .9s linear infinite; }
+    .halcyon-page { display: flex; flex-direction: column; width: 100%; flex: 1; min-width: 0; }
+    .halcyon-container { display: flex; flex-direction: column; width: 100%; max-width: 720px; min-height: 100%; margin: 0 auto; }
+    .halcyon-link { color: ${T.pine}; text-decoration: none; }
+    .halcyon-link:hover { text-decoration: underline; }
+    .halcyon-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .halcyon-scroll::-webkit-scrollbar-thumb { background: ${T.line}; border-radius: 99px; }
+    .halcyon button { transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease, background-color .15s ease; }
+    .halcyon button:hover:not(:disabled) { transform: translateY(-1px); }
+    .halcyon button:active:not(:disabled) { transform: translateY(0); }
+    .halcyon-card { transition: transform .18s ease, box-shadow .18s ease; }
+    a.halcyon-card:hover, button.halcyon-card:hover { transform: translateY(-2px); box-shadow: ${shadow.md}; }
+    @keyframes halcyon-tick { 0% { opacity: .35; transform: translateY(-2px); } 100% { opacity: 1; transform: none; } }
+    @keyframes halcyon-rise { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: none; } }
+    @keyframes halcyon-spin { to { transform: rotate(360deg); } }
+    @keyframes halcyon-crawl { to { background-position: 14px 0; } }
+    .halcyon-tick { animation: halcyon-tick .28s ease-out; }
+    .halcyon-rise { animation: halcyon-rise .3s ease-out both; }
+    .halcyon-spin { animation: halcyon-spin .9s linear infinite; }
     @media (prefers-reduced-motion: reduce) {
-      .heha *, .heha *::before, .heha *::after { animation: none !important; transition: none !important; }
+      .halcyon *, .halcyon *::before, .halcyon *::after { animation: none !important; transition: none !important; }
     }
   `;
 
