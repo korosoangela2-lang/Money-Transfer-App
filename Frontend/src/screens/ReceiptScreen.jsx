@@ -35,7 +35,7 @@ export default function ReceiptScreen() {
     : [["Description", tx.name], ["Amount", money(tx.amount, tx.currency)]];
 
   return (
-    <div className="flex flex-col heha-rise" style={{ minHeight: "100%" }}>
+    <div className="flex flex-col halcyon-rise" style={{ minHeight: "100%" }}>
       <div className="flex items-center gap-3 px-5 pt-5 pb-2">
         <button onClick={() => navigate(out ? "/transactions" : "/home")} style={{ color: T.muted }}>
           <ChevronLeft size={20} />

@@ -14,7 +14,7 @@ app.post("/api/mpesa/stkpush", async (req, res) => {
     return res.status(400).json({ error: "phone and a positive amount are required." });
   }
   try {
-    const result = await stkPush({ phone, amount, description: "Heha wallet top-up" });
+    const result = await stkPush({ phone, amount, description: "Halcyon wallet top-up" });
     createPending(result.CheckoutRequestID, { phone, amount });
     res.json({ checkoutRequestId: result.CheckoutRequestID, merchantRequestId: result.MerchantRequestID });
   } catch (err) {
@@ -47,4 +47,4 @@ app.get("/api/mpesa/status/:checkoutRequestId", (req, res) => {
 });
 
 const port = process.env.PORT || 4000;
-app.listen(port, () => console.log(`Heha M-Pesa server listening on :${port}`));
+app.listen(port, () => console.log(`Halcyon M-Pesa server listening on :${port}`));

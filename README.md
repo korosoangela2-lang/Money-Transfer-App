@@ -1,6 +1,6 @@
-# Heha Banking Agency
+# Halcyon Banking Agency
 
-Heha Banking Agency is a React frontend for a cross-border money transfer product, backed by a
+Halcyon Banking Agency is a React frontend for a cross-border money transfer product, backed by a
 Flask API, plus a small Node backend that handles one real integration: M-Pesa top-ups via
 Safaricom's Daraja API.
 

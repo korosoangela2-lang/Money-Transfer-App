@@ -1,6 +1,6 @@
 import { Suspense, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Home, Users, Receipt, TrendingUp, LogOut, Loader2 } from "lucide-react";
+import { Home, Users, Receipt, Wallet, TrendingUp, LogOut, Loader2 } from "lucide-react";
 import { T } from "../../lib/theme.jsx";
 import { Button } from "../../components/primitives.jsx";
 import { Logo } from "../../components/Logo.jsx";
@@ -13,6 +13,7 @@ const ADMIN_NAV = [
   { path: "/admin", label: "Overview", icon: Home },
   { path: "/admin/users", label: "Users", icon: Users },
   { path: "/admin/transactions", label: "Transactions", icon: Receipt },
+  { path: "/admin/wallets", label: "Wallets", icon: Wallet },
   { path: "/admin/revenue", label: "Revenue", icon: TrendingUp },
 ];
 
@@ -52,7 +53,7 @@ export default function AdminShell() {
   if (state.admin.status !== "succeeded") {
     return (
       <div className="flex items-center justify-center" style={{ height: "100vh" }}>
-        <Loader2 className="heha-spin" size={22} style={{ color: T.pine }} />
+        <Loader2 className="halcyon-spin" size={22} style={{ color: T.pine }} />
       </div>
     );
   }
@@ -75,7 +76,7 @@ export default function AdminShell() {
           <Button variant="ghost" size="sm" full icon={LogOut} onClick={logout}>Log out</Button>
         </div>
       </div>
-      <div className="heha-scroll flex-1 overflow-y-auto p-8">
+      <div className="halcyon-scroll flex-1 overflow-y-auto p-8">
         <Suspense fallback={<LoadingScreen />}>
           <Outlet />
         </Suspense>

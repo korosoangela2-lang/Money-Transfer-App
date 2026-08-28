@@ -46,7 +46,7 @@ export default function LoginScreen() {
             </button>
           </div>
         </Field>
-        <button type="button" className="text-sm text-right heha-link" style={{ color: T.muted, alignSelf: "flex-end" }} onClick={() => navigate("/forgot-password")}>
+        <button type="button" className="text-sm text-right halcyon-link" style={{ color: T.muted, alignSelf: "flex-end" }} onClick={() => navigate("/forgot-password")}>
           Forgot password?
         </button>
         {state.auth.error && (
@@ -58,7 +58,7 @@ export default function LoginScreen() {
       </form>
       <div className="text-sm text-center" style={{ color: T.muted }}>
         New to {BRAND_NAME}?{" "}
-        <button className="font-semibold heha-link" onClick={() => navigate("/register")}>
+        <button className="font-semibold halcyon-link" onClick={() => navigate("/register")}>
           Create an account
         </button>
       </div>

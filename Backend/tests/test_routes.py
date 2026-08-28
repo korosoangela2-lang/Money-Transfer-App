@@ -320,7 +320,7 @@ class P2PTransferTests(ApiTestCase):
         self.client.post("/api/wallet/add-funds", headers=self.auth_headers(self.token), json={"amount": 500, "source": "Visa"})
         self.other_token = self.register(email="badru@example.com").get_json()["token"]
 
-    def test_sends_between_two_heha_wallets(self):
+    def test_sends_between_two_halcyon_wallets(self):
         res = self.client.post(
             "/api/transfers/to-user",
             headers=self.auth_headers(self.token),
@@ -478,6 +478,21 @@ class AdminTests(ApiTestCase):
         res = self.client.delete(f"/api/admin/users/{user_id}", headers=self.auth_headers(admin_token))
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.get_json()["id"], user_id)
+
+    def test_admin_can_adjust_a_users_wallet_balance(self):
+        user_id = self.register().get_json()["user"]["id"]
+        admin_token = self.make_admin()
+
+        res = self.client.patch(f"/api/admin/users/{user_id}", headers=self.auth_headers(admin_token), json={"balance": 250.5})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.get_json()["patch"]["balance"], 250.5)
+
+        res = self.client.get("/api/admin/data", headers=self.auth_headers(admin_token))
+        updated = next(u for u in res.get_json()["users"] if u["id"] == user_id)
+        self.assertEqual(updated["balance"], 250.5)
+
+        res = self.client.patch(f"/api/admin/users/{user_id}", headers=self.auth_headers(admin_token), json={"balance": -5})
+        self.assertEqual(res.status_code, 400)
 
 
 if __name__ == "__main__":

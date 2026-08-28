@@ -41,7 +41,7 @@ def create_request():
 
         payer = find_user_by_email(db, email)
         if not payer:
-            return jsonify({"error": "No Heha account found with that Pay ID."}), 404
+            return jsonify({"error": "No Halcyon account found with that Pay ID."}), 404
 
         req = new_money_request(
             requester_id=requester["id"], requester_name=requester["name"],

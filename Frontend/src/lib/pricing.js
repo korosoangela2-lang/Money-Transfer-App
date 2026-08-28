@@ -2,7 +2,7 @@ import { round2 } from "./format.js";
 
 /**
  * Pricing model — the product thesis lives here.
- * Heha charges one visible percentage fee and discloses the FX spread instead of
+ * Halcyon charges one visible percentage fee and discloses the FX spread instead of
  * burying it in the rate. Both streams are what the admin revenue chart plots.
  */
 export const PRICING = { feeRate: 0.009, feeMin: 0.3, feeCap: 4.5, spread: 0.0035, bankBenchmark: 0.062 };

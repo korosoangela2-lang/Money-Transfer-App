@@ -1,6 +1,6 @@
 {
-  "name": "Heha Banking Agency",
-  "short_name": "Heha",
+  "name": "Halcyon Banking Agency",
+  "short_name": "Halcyon",
   "description": "Send money home, without the markup.",
   "start_url": "/",
   "display": "standalone",

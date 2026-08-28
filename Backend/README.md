@@ -1,6 +1,6 @@
-# Heha Backend (Flask + db.json)
+# Halcyon Backend (Flask + db.json)
 
-A REST API for the Heha Banking Agency data model — accounts, wallets,
+A REST API for the Halcyon Banking Agency data model — accounts, wallets,
 beneficiaries, transfers, and the admin dashboard — persisted to a flat
 `db.json` file. `Frontend/src/lib/api.js` calls this API directly over
 `fetch`. It's a separate service from `Frontend/server/`, which only
@@ -119,6 +119,6 @@ python -m unittest discover -s tests -t .
   `http://localhost:5173`, Vite's default port). If the frontend runs on a
   different port, update `.env` or requests from it will be rejected.
 - The frontend only persists a session token client-side (`localStorage`,
-  key `heha_token`) — everything else (users, wallets, beneficiaries,
+  key `halcyon_token`) — everything else (users, wallets, beneficiaries,
   transactions) is fetched fresh from this API. See `Frontend/src/lib/api.js`
   and `Frontend/src/lib/session.js`.

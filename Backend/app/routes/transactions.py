@@ -105,7 +105,7 @@ def send_to_user():
 
         recipient = find_user_by_email(db, email)
         if not recipient:
-            return jsonify({"error": "No Heha account found with that Pay ID."}), 404
+            return jsonify({"error": "No Halcyon account found with that Pay ID."}), 404
         if recipient["status"] == "suspended":
             return jsonify({"error": "That account can't receive money right now."}), 400
         if amount > sender["wallet"]["balance"]:

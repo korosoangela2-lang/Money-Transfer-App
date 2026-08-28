@@ -110,7 +110,7 @@ const DASHBOARD_CALLOUTS = [
 const SAMPLE_AMOUNT = 500;
 const q = quote(SAMPLE_AMOUNT, BASE_RATES.KES);
 const bankCost = Math.round(SAMPLE_AMOUNT * PRICING.bankBenchmark * 100) / 100;
-const hehaCost = q.fee + q.spreadRevenue;
+const halcyonCost = q.fee + q.spreadRevenue;
 
 function SectionHeading({ children }) {
   return <div className="text-2xl lg:text-3xl mb-10" style={{ fontFamily: DISPLAY, fontWeight: 600 }}>{children}</div>;
@@ -146,7 +146,7 @@ function FaqItem({ q, a }) {
         <span className="text-sm font-semibold">{q}</span>
         <ChevronDown size={17} style={{ color: T.faint, transform: open ? "rotate(180deg)" : "none", transition: "transform .15s ease", flexShrink: 0 }} />
       </button>
-      {open && <div className="px-5 pb-4 text-sm heha-rise" style={{ color: T.muted }}>{a}</div>}
+      {open && <div className="px-5 pb-4 text-sm halcyon-rise" style={{ color: T.muted }}>{a}</div>}
     </div>
   );
 }
@@ -280,9 +280,9 @@ export default function LandingScreen() {
             </div>
             <div className="p-6 rounded-2xl flex flex-col gap-3" style={{ background: T.ink, color: "#fff" }}>
               <div className="text-xs font-semibold" style={{ color: T.marigold, letterSpacing: "0.04em" }}>{BRAND_NAME.toUpperCase()}</div>
-              <div className="text-3xl font-semibold" style={{ fontFamily: DISPLAY }}>{money(hehaCost)}</div>
+              <div className="text-3xl font-semibold" style={{ fontFamily: DISPLAY }}>{money(halcyonCost)}</div>
               <div className="text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>One visible {(PRICING.feeRate * 100).toFixed(1)}% fee plus a disclosed {(PRICING.spread * 100).toFixed(2)}% FX spread — nothing hidden in the rate.</div>
-              <div className="flex items-center gap-1.5 text-xs pt-1" style={{ color: T.marigold }}><Check size={13} /> You keep ~{money(bankCost - hehaCost)}</div>
+              <div className="flex items-center gap-1.5 text-xs pt-1" style={{ color: T.marigold }}><Check size={13} /> You keep ~{money(bankCost - halcyonCost)}</div>
             </div>
           </div>
         </div>
@@ -422,7 +422,7 @@ export default function LandingScreen() {
               <div className="text-sm" style={{ color: T.muted }}>Our support team replies within one business day.</div>
             </div>
           </div>
-          <a href="mailto:support@heha.example" className="inline-flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold flex-shrink-0" style={{ background: T.pine, color: "#fff" }}>
+          <a href="mailto:support@halcyon.example" className="inline-flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold flex-shrink-0" style={{ background: T.pine, color: "#fff" }}>
             <Mail size={15} /> Email support
           </a>
         </div>

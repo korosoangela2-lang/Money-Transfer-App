@@ -50,7 +50,7 @@ export function AuthSplit({ children }) {
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12" style={{ fontFamily: SANS }}>
         <Logo tone="pine" size={28} textSize={19} className="lg:hidden mb-8" />
-        <div className="w-full flex flex-col gap-6 heha-rise" style={{ maxWidth: 380 }}>
+        <div className="w-full flex flex-col gap-6 halcyon-rise" style={{ maxWidth: 380 }}>
           {children}
         </div>
       </div>

@@ -9,7 +9,7 @@ export default function AdminRevenueScreen() {
   const { state } = useStore();
   const revenue = state.admin.revenue;
   return (
-    <div className="flex flex-col gap-6 heha-rise">
+    <div className="flex flex-col gap-6 halcyon-rise">
       <div>
         <div className="text-xl font-semibold">Revenue</div>
         <div className="text-sm" style={{ color: T.muted }}>Fees, spread, and volume over time.</div>

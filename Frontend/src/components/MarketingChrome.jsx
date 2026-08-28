@@ -31,16 +31,16 @@ export function MarketingHeader({ nav }) {
         >
           {nav.map((item) =>
             item.href.startsWith("#") ? (
-              <a key={item.label} href={item.href} className="heha-link">{item.label}</a>
+              <a key={item.label} href={item.href} className="halcyon-link">{item.label}</a>
             ) : (
-              <button key={item.label} onClick={() => navigate(item.href)} className="heha-link" style={{ background: "none", border: "none", padding: 0, fontWeight: 600, fontSize: "inherit", fontFamily: "inherit" }}>
+              <button key={item.label} onClick={() => navigate(item.href)} className="halcyon-link" style={{ background: "none", border: "none", padding: 0, fontWeight: 600, fontSize: "inherit", fontFamily: "inherit" }}>
                 {item.label}
               </button>
             )
           )}
         </nav>
         <div className="flex items-center gap-3 lg:gap-4" style={{ flexShrink: 0 }}>
-          <button className="hidden sm:inline text-sm font-medium heha-link" style={{ color: T.muted, whiteSpace: "nowrap" }} onClick={() => navigate("/login")}>
+          <button className="hidden sm:inline text-sm font-medium halcyon-link" style={{ color: T.muted, whiteSpace: "nowrap" }} onClick={() => navigate("/login")}>
             Log in
           </button>
           <Button size="sm" style={{ whiteSpace: "nowrap", borderRadius: 10 }} onClick={() => navigate("/register")}>Get started</Button>
@@ -56,7 +56,7 @@ export function MarketingHeader({ nav }) {
       </div>
       {open && (
         <nav
-          className="lg:hidden flex flex-col heha-rise"
+          className="lg:hidden flex flex-col halcyon-rise"
           style={{ borderTop: `1px solid ${T.line}`, background: T.surface }}
         >
           {nav.map((item) =>
@@ -65,7 +65,7 @@ export function MarketingHeader({ nav }) {
                 key={item.label}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="heha-link text-sm font-semibold px-6 py-3.5"
+                className="halcyon-link text-sm font-semibold px-6 py-3.5"
                 style={{ borderTop: `1px solid ${T.line}` }}
               >
                 {item.label}
@@ -74,7 +74,7 @@ export function MarketingHeader({ nav }) {
               <button
                 key={item.label}
                 onClick={() => go(item.href)}
-                className="heha-link text-left text-sm font-semibold px-6 py-3.5"
+                className="halcyon-link text-left text-sm font-semibold px-6 py-3.5"
                 style={{ background: "none", border: "none", borderTop: `1px solid ${T.line}` }}
               >
                 {item.label}
@@ -102,9 +102,9 @@ export function MarketingFooter({ columns }) {
             <div className="text-xs font-semibold mb-1" style={{ color: T.faint, letterSpacing: "0.04em" }}>{col.heading}</div>
             {col.links.map((link) =>
               link.to.startsWith("#") ? (
-                <a key={link.label} href={link.to} className="heha-link">{link.label}</a>
+                <a key={link.label} href={link.to} className="halcyon-link">{link.label}</a>
               ) : (
-                <button key={link.label} className="text-left heha-link" style={{ background: "none", border: "none", padding: 0, fontFamily: "inherit" }} onClick={() => navigate(link.to)}>
+                <button key={link.label} className="text-left halcyon-link" style={{ background: "none", border: "none", padding: 0, fontFamily: "inherit" }} onClick={() => navigate(link.to)}>
                   {link.label}
                 </button>
               )
