@@ -32,7 +32,6 @@ export const select = {
     return [...buckets.values()];
   },
 
-  /** Where the money goes, by destination currency. */
   corridorSplit: (s) => {
     const map = new Map();
     select.sends(s).filter((t) => t.status !== "failed").forEach((t) => {
