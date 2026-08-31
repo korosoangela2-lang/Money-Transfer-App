@@ -81,7 +81,6 @@ export function reducer(state, action) {
     case "admin/userDeleted":
       return { ...state, admin: { ...state.admin, users: state.admin.users.filter((u) => u.id !== payload) } };
 
-    /* ui */
     case "ui/toastShown":
       return { ...state, ui: { ...state.ui, toast: payload } };
     case "ui/toastCleared":
