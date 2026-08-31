@@ -17,7 +17,7 @@ def write_db(db):
     tmp = f"{path}.tmp"
     with open(tmp, "w") as f:
         json.dump(db, f, indent=2)
-    os.replace(tmp, path)  # atomic, so concurrent reads never see a half-written file
+    os.replace(tmp, path)  
 
 
 def read_db():
@@ -52,7 +52,6 @@ def find_user_by_email(db, email):
 
 def find_beneficiary(user, beneficiary_id):
     return next((b for b in user["beneficiaries"] if b["id"] == beneficiary_id), None)
-
 
 def find_money_request(db, request_id):
     return next((r for r in db.setdefault("moneyRequests", []) if r["id"] == request_id), None)
