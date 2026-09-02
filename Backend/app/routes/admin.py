@@ -24,6 +24,89 @@ def _year_month_n_ago(n):
 @bp.get("/data")
 @admin_required
 def admin_data():
+    """Admin console data: users, send transactions, and monthly revenue.
+
+    Revenue covers the trailing 6 months (oldest to newest).
+    ---
+    tags:
+      - Admin
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: Aggregated console data.
+        schema:
+          type: object
+          properties:
+            users:
+              type: array
+              items:
+                allOf:
+                  - $ref: '#/definitions/User'
+                  - type: object
+                    properties:
+                      balance:
+                        type: number
+                        format: float
+                      sends:
+                        type: integer
+                      volume:
+                        type: number
+                        format: float
+            transactions:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  user:
+                    type: string
+                  corridor:
+                    type: string
+                    example: "CAD ▸ KES"
+                  amount:
+                    type: number
+                    format: float
+                  fee:
+                    type: number
+                    format: float
+                  spreadRevenue:
+                    type: number
+                    format: float
+                  status:
+                    type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+            revenue:
+              type: array
+              items:
+                type: object
+                properties:
+                  month:
+                    type: string
+                    example: Aug
+                  fees:
+                    type: number
+                    format: float
+                  spread:
+                    type: number
+                    format: float
+                  volume:
+                    type: number
+                    format: float
+                  transfers:
+                    type: integer
+      401:
+        description: Not authenticated.
+        schema:
+          $ref: '#/definitions/Error'
+      403:
+        description: Admin access required.
+        schema:
+          $ref: '#/definitions/Error'
+    """
     db = read_db()
     users = db["users"]
 
@@ -75,6 +158,68 @@ def admin_data():
 @bp.post("/users")
 @admin_required
 def create_user():
+    """Create a user account (admin only).
+
+    If `password` is omitted, a random one is generated.
+    ---
+    tags:
+      - Admin
+    security:
+      - Bearer: []
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required: [name, email]
+          properties:
+            name:
+              type: string
+            email:
+              type: string
+            phone:
+              type: string
+            country:
+              type: string
+              default: Canada
+            role:
+              type: string
+              enum: [user, admin]
+              default: user
+            kyc:
+              type: string
+              enum: [unverified, pending, verified]
+              default: unverified
+            status:
+              type: string
+              enum: [active, suspended]
+              default: active
+            password:
+              type: string
+              format: password
+    responses:
+      201:
+        description: The newly created user's public profile.
+        schema:
+          $ref: '#/definitions/User'
+      400:
+        description: name and email are required.
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Not authenticated.
+        schema:
+          $ref: '#/definitions/Error'
+      403:
+        description: Admin access required.
+        schema:
+          $ref: '#/definitions/Error'
+      409:
+        description: An account with that email already exists.
+        schema:
+          $ref: '#/definitions/Error'
+    """
     body = request.get_json(silent=True) or {}
     email = (body.get("email") or "").strip()
     name = (body.get("name") or "").strip()
@@ -103,6 +248,71 @@ def create_user():
 @bp.patch("/users/<user_id>")
 @admin_required
 def update_user(user_id):
+    """Update a user account (admin only).
+
+    Any of `name`, `phone`, `country`, `role`, `kyc`, `status`, `balance`
+    may be included; only the provided fields are changed.
+    ---
+    tags:
+      - Admin
+    security:
+      - Bearer: []
+    parameters:
+      - in: path
+        name: user_id
+        type: string
+        required: true
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+            phone:
+              type: string
+            country:
+              type: string
+            role:
+              type: string
+              enum: [user, admin]
+            kyc:
+              type: string
+              enum: [unverified, pending, verified]
+            status:
+              type: string
+              enum: [active, suspended]
+            balance:
+              type: number
+              format: float
+    responses:
+      200:
+        description: The user id and the patch that was applied.
+        schema:
+          type: object
+          properties:
+            id:
+              type: string
+            patch:
+              type: object
+      400:
+        description: Balance must be a non-negative number.
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Not authenticated.
+        schema:
+          $ref: '#/definitions/Error'
+      403:
+        description: Admin access required.
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: User not found.
+        schema:
+          $ref: '#/definitions/Error'
+    """
     patch = request.get_json(silent=True) or {}
     with mutate_db() as db:
         user = find_user(db, user_id)
@@ -127,6 +337,40 @@ def update_user(user_id):
 @bp.delete("/users/<user_id>")
 @admin_required
 def delete_user(user_id):
+    """Delete a user account (admin only).
+
+    Also invalidates any active sessions for that user.
+    ---
+    tags:
+      - Admin
+    security:
+      - Bearer: []
+    parameters:
+      - in: path
+        name: user_id
+        type: string
+        required: true
+    responses:
+      200:
+        description: The id of the deleted user.
+        schema:
+          type: object
+          properties:
+            id:
+              type: string
+      401:
+        description: Not authenticated.
+        schema:
+          $ref: '#/definitions/Error'
+      403:
+        description: Admin access required.
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: User not found.
+        schema:
+          $ref: '#/definitions/Error'
+    """
     with mutate_db() as db:
         user = find_user(db, user_id)
         if not user:

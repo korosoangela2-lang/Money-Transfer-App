@@ -1,8 +1,10 @@
 import click
 from flask import Flask
 from flask_cors import CORS
+from flasgger import Swagger
 
 from .config import Config
+from .swagger import SWAGGER_CONFIG, SWAGGER_TEMPLATE
 
 
 def create_app(config_class=Config):
@@ -10,6 +12,7 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
 
     CORS(app, resources={r"/api/*": {"origins": app.config["CORS_ORIGIN"]}})
+    Swagger(app, template=SWAGGER_TEMPLATE, config=SWAGGER_CONFIG)
 
     from .routes import ALL_BLUEPRINTS
 
@@ -18,6 +21,20 @@ def create_app(config_class=Config):
 
     @app.get("/api/health")
     def health():
+        """Health check.
+        ---
+        tags:
+          - Health
+        responses:
+          200:
+            description: The API is up.
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: ok
+        """
         return {"status": "ok"}
 
     register_cli(app)

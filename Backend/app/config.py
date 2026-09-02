@@ -7,3 +7,4 @@ class Config:
     DB_FILE = os.environ.get("DB_FILE", os.path.join(BASE_DIR, "db.json"))
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key")
     CORS_ORIGIN = os.environ.get("CORS_ORIGIN", "http://localhost:5173")
+    JWT_EXP_SECONDS = int(os.environ.get("JWT_EXP_SECONDS", 60 * 60 * 24 * 7))  # 7 days
