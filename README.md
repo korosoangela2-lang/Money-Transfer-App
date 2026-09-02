@@ -113,8 +113,3 @@ update these by hand too:
 - `Frontend/public/` — favicon, manifest icons, `manifest.webmanifest`
 - The color palette and fonts live in `Frontend/src/lib/theme.jsx` (`T`,
   `SANS`, `DISPLAY`) if you want a different look, not just a different name.
-
-## License
-
-See `LICENSE`. This is a commercial template, not open source — read it
-before redistributing or reselling.
