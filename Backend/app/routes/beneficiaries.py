@@ -10,6 +10,24 @@ bp = Blueprint("beneficiaries", __name__, url_prefix="/api/beneficiaries")
 @bp.get("")
 @login_required
 def list_beneficiaries():
+    """List the current user's saved beneficiaries.
+    ---
+    tags:
+      - Beneficiaries
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: The current user's beneficiaries.
+        schema:
+          type: array
+          items:
+            $ref: '#/definitions/Beneficiary'
+      401:
+        description: Not authenticated.
+        schema:
+          $ref: '#/definitions/Error'
+    """
     db = read_db()
     user = find_user(db, g.current_user_id)
     return jsonify(user["beneficiaries"])
@@ -18,6 +36,57 @@ def list_beneficiaries():
 @bp.post("")
 @login_required
 def add_beneficiary():
+    """Add a new beneficiary.
+    ---
+    tags:
+      - Beneficiaries
+    security:
+      - Bearer: []
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required: [name, currency, method]
+          properties:
+            name:
+              type: string
+              example: John Smith
+            relation:
+              type: string
+              example: Brother
+            currency:
+              type: string
+              example: KES
+            country:
+              type: string
+              example: Kenya
+            flag:
+              type: string
+              example: 🇰🇪
+            method:
+              type: string
+              enum: [mobile, bank, cash]
+            account:
+              type: string
+              example: "0712345678"
+            bank:
+              type: string
+    responses:
+      201:
+        description: The newly created beneficiary.
+        schema:
+          $ref: '#/definitions/Beneficiary'
+      400:
+        description: name, currency, and method are required.
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Not authenticated.
+        schema:
+          $ref: '#/definitions/Error'
+    """
     body = request.get_json(silent=True) or {}
     name = (body.get("name") or "").strip()
     currency = (body.get("currency") or "").strip()
@@ -45,6 +114,37 @@ def add_beneficiary():
 @bp.delete("/<beneficiary_id>")
 @login_required
 def remove_beneficiary(beneficiary_id):
+    """Remove a beneficiary.
+
+    Past transactions referencing this beneficiary are kept, with their
+    `beneficiaryId` cleared.
+    ---
+    tags:
+      - Beneficiaries
+    security:
+      - Bearer: []
+    parameters:
+      - in: path
+        name: beneficiary_id
+        type: string
+        required: true
+    responses:
+      200:
+        description: The id of the removed beneficiary.
+        schema:
+          type: object
+          properties:
+            id:
+              type: string
+      401:
+        description: Not authenticated.
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: Beneficiary not found.
+        schema:
+          $ref: '#/definitions/Error'
+    """
     with mutate_db() as db:
         user = find_user(db, g.current_user_id)
         beneficiary = find_beneficiary(user, beneficiary_id)

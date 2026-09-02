@@ -1,8 +1,32 @@
+import time
 from functools import wraps
 
-from flask import g, jsonify, request
+import jwt
+from flask import current_app, g, jsonify, request
 
+from .ids import gen_id
 from .store import find_user, read_db
+
+JWT_ALGORITHM = "HS256"
+
+
+def issue_token(user_id):
+    """Start a new server-tracked session and return (session_id, signed JWT).
+
+    The session id is stored as the JWT's `jti` claim and as a key in
+    db["sessions"], so logout/password-reset can still revoke a token
+    before it expires even though the JWT itself is stateless.
+    """
+    session_id = gen_id("session")
+    now = int(time.time())
+    payload = {
+        "sub": user_id,
+        "jti": session_id,
+        "iat": now,
+        "exp": now + current_app.config["JWT_EXP_SECONDS"],
+    }
+    token = jwt.encode(payload, current_app.config["SECRET_KEY"], algorithm=JWT_ALGORITHM)
+    return session_id, token
 
 
 def _bearer_token():
@@ -12,12 +36,22 @@ def _bearer_token():
     return header[len("Bearer ") :].strip() or None
 
 
+def _decode_token(token):
+    try:
+        return jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=[JWT_ALGORITHM])
+    except jwt.InvalidTokenError:
+        return None
+
+
 def login_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         token = _bearer_token()
+        payload = _decode_token(token) if token else None
+        session_id = payload.get("jti") if payload else None
+
         db = read_db()
-        user_id = db["sessions"].get(token) if token else None
+        user_id = db["sessions"].get(session_id) if session_id else None
         user = find_user(db, user_id) if user_id else None
         if not user:
             return jsonify({"error": "Not authenticated."}), 401
@@ -25,6 +59,7 @@ def login_required(fn):
             return jsonify({"error": "This account has been suspended."}), 403
         g.current_user_id = user["id"]
         g.current_user = user
+        g.session_id = session_id
         g.session_token = token
         return fn(*args, **kwargs)
 

@@ -30,6 +30,24 @@ def move_wallet_funds(sender, recipient, amount, *, sender_name=None, recipient_
 @bp.get("")
 @login_required
 def list_transactions():
+    """List the current user's transactions.
+    ---
+    tags:
+      - Transactions
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: Transactions, most recent first.
+        schema:
+          type: array
+          items:
+            $ref: '#/definitions/Transaction'
+      401:
+        description: Not authenticated.
+        schema:
+          $ref: '#/definitions/Error'
+    """
     db = read_db()
     user = find_user(db, g.current_user_id)
     return jsonify(user["transactions"])
@@ -38,6 +56,50 @@ def list_transactions():
 @transfers_bp.post("")
 @login_required
 def send_money():
+    """Send money to a saved beneficiary (cross-border transfer with FX quote).
+    ---
+    tags:
+      - Transfers
+    security:
+      - Bearer: []
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required: [beneficiaryId, amount]
+          properties:
+            beneficiaryId:
+              type: string
+              example: ben_abc123
+            amount:
+              type: number
+              format: float
+              example: 100.0
+              description: Amount to send, in the sender's wallet currency.
+            method:
+              type: string
+              enum: [mobile, bank, cash]
+              default: mobile
+    responses:
+      201:
+        description: The pending send transaction, including the fee/FX quote.
+        schema:
+          $ref: '#/definitions/Transaction'
+      400:
+        description: Invalid amount/method, or the quoted total exceeds the wallet balance.
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Not authenticated.
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: Beneficiary not found.
+        schema:
+          $ref: '#/definitions/Error'
+    """
     body = request.get_json(silent=True) or {}
     beneficiary_id = body.get("beneficiaryId")
     try:
@@ -86,6 +148,48 @@ def send_money():
 @transfers_bp.post("/to-user")
 @login_required
 def send_to_user():
+    """Send money directly to another Halcyon user by Pay ID (email).
+
+    Same-currency wallet-to-wallet transfer — no fee or FX spread.
+    ---
+    tags:
+      - Transfers
+    security:
+      - Bearer: []
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required: [email, amount]
+          properties:
+            email:
+              type: string
+              description: Recipient's Pay ID (email).
+              example: friend@example.com
+            amount:
+              type: number
+              format: float
+              example: 25.0
+    responses:
+      201:
+        description: The sender's completed outbound transaction.
+        schema:
+          $ref: '#/definitions/Transaction'
+      400:
+        description: Invalid amount, missing email, sending to self, recipient suspended, or amount exceeds balance.
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Not authenticated.
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: No account found with that Pay ID.
+        schema:
+          $ref: '#/definitions/Error'
+    """
     body = request.get_json(silent=True) or {}
     email = (body.get("email") or "").strip()
     try:

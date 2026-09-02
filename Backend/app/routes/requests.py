@@ -11,6 +11,31 @@ bp = Blueprint("requests", __name__, url_prefix="/api/requests")
 @bp.get("")
 @login_required
 def list_requests():
+    """List money requests involving the current user.
+    ---
+    tags:
+      - Requests
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: Requests where the current user is the payer (incoming) or the requester (outgoing).
+        schema:
+          type: object
+          properties:
+            incoming:
+              type: array
+              items:
+                $ref: '#/definitions/MoneyRequest'
+            outgoing:
+              type: array
+              items:
+                $ref: '#/definitions/MoneyRequest'
+      401:
+        description: Not authenticated.
+        schema:
+          $ref: '#/definitions/Error'
+    """
     db = read_db()
     all_requests = db.setdefault("moneyRequests", [])
     incoming = [r for r in all_requests if r["payerId"] == g.current_user_id]
@@ -21,6 +46,49 @@ def list_requests():
 @bp.post("")
 @login_required
 def create_request():
+    """Request money from another Halcyon user by Pay ID (email).
+    ---
+    tags:
+      - Requests
+    security:
+      - Bearer: []
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required: [email, amount]
+          properties:
+            email:
+              type: string
+              description: Payer's Pay ID (email).
+              example: friend@example.com
+            amount:
+              type: number
+              format: float
+              example: 50.0
+            note:
+              type: string
+              example: Rent split
+    responses:
+      201:
+        description: The newly created pending request.
+        schema:
+          $ref: '#/definitions/MoneyRequest'
+      400:
+        description: Invalid amount, missing email, or requesting from self.
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Not authenticated.
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: No account found with that Pay ID.
+        schema:
+          $ref: '#/definitions/Error'
+    """
     body = request.get_json(silent=True) or {}
     email = (body.get("email") or "").strip()
     try:
@@ -56,6 +124,40 @@ def create_request():
 @bp.post("/<request_id>/pay")
 @login_required
 def pay_request(request_id):
+    """Pay a pending money request addressed to the current user.
+    ---
+    tags:
+      - Requests
+    security:
+      - Bearer: []
+    parameters:
+      - in: path
+        name: request_id
+        type: string
+        required: true
+    responses:
+      200:
+        description: The settled request, including the resulting transaction.
+        schema:
+          allOf:
+            - $ref: '#/definitions/MoneyRequest'
+            - type: object
+              properties:
+                transaction:
+                  $ref: '#/definitions/Transaction'
+      400:
+        description: Request already settled, or amount exceeds the wallet balance.
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Not authenticated.
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: Request not found (or not addressed to the current user).
+        schema:
+          $ref: '#/definitions/Error'
+    """
     with mutate_db() as db:
         req = find_money_request(db, request_id)
         if not req or req["payerId"] != g.current_user_id:
@@ -78,6 +180,35 @@ def pay_request(request_id):
 @bp.post("/<request_id>/decline")
 @login_required
 def decline_request(request_id):
+    """Decline a pending money request addressed to the current user.
+    ---
+    tags:
+      - Requests
+    security:
+      - Bearer: []
+    parameters:
+      - in: path
+        name: request_id
+        type: string
+        required: true
+    responses:
+      200:
+        description: The declined request.
+        schema:
+          $ref: '#/definitions/MoneyRequest'
+      400:
+        description: Request already settled.
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Not authenticated.
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: Request not found (or not addressed to the current user).
+        schema:
+          $ref: '#/definitions/Error'
+    """
     with mutate_db() as db:
         req = find_money_request(db, request_id)
         if not req or req["payerId"] != g.current_user_id:
